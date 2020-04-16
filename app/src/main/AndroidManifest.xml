@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.project_1">
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher_nico"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_nico_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".MiniGame01.MiniGame01"
+            android:screenOrientation="landscape"
+            tools:ignore="LockedOrientationActivity"></activity>
+        <activity android:name=".MusicPlayer.CheckPermission" />
+        <activity android:name=".MusicPlayer.MusicPlayerActivity"
+            android:launchMode="singleTop"/>
+        <activity android:name=".MainActivity"
+            android:launchMode="singleTop"
+            android:screenOrientation="landscape"
+            tools:ignore="LockedOrientationActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <receiver android:name=".MusicPlayer.MusicPlayerNotification">
+            <intent-filter>
+                <action android:name="android.MusicPlayerNotification" />
+                <action android:name="android.MusicPauseOrPlay" />
+                <action android:name="android.MusicNext" />
+                <action android:name="android.MusicPrev" />
+            </intent-filter>
+        </receiver>
+        <service android:name=".MusicPlayer.NotifyService" />
+    </application>
+
+</manifest>
