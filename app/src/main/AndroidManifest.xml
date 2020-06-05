@@ -23,7 +23,7 @@
             android:launchMode="singleTop"/>
         <activity android:name=".MainActivity"
             android:launchMode="singleTop"
-            android:screenOrientation="landscape"
+            android:screenOrientation="sensorLandscape"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

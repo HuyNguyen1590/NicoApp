@@ -7,7 +7,10 @@ import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -15,7 +18,10 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -24,10 +30,14 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 
+import com.example.project_1.AlarmService.AlarmAdapter;
+import com.example.project_1.DAO.AlarmDAO;
 import com.example.project_1.MiniGame01.MiniGame01;
+import com.example.project_1.Model.Alarm;
 import com.example.project_1.MusicPlayer.CheckPermission;
 import com.example.project_1.MusicPlayer.MusicPlayerActivity;
 import com.example.project_1.MusicPlayer.MusicPlayerAdapter;
@@ -35,32 +45,37 @@ import com.example.project_1.MusicPlayer.MusicPlayerNotification;
 import com.example.project_1.MusicPlayer.NotifyService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
-    ImageView iv_character, bg, hour, minute, second;
-    RelativeLayout clock;
+    ImageView iv_character;
     Button btn_game;
-    TextView tv_name, tv_message;
+    TextView tv_name, tv_message, clock_time;
     public static MediaPlayer voice;
-    // For clock
-    float h=0;
-    float m=0;
-    float s=0;
-    float oneSec = 6;
     // Message array
     private ArrayList<String> message_arr = new ArrayList<>();
     private ArrayList<Integer> voice_arr = new ArrayList<>();
+    // Alarm
+    ListView lv_alarm;
+    List<Alarm> alarmList = new ArrayList<>();
+    AlarmAdapter alarmAdapter;
+    ImageButton alarm_add;
+    AlarmDAO alarmDAO;
+    String [] days = new String[]{"Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"};
+    ArrayList<String> repeatDays = new ArrayList<>();
+    String repeat = "";
     //Media player
     int UPDATE_FREQUENCY = 500;
     int POSITION=0;
     TextView tv_fileduocchon;
     SeekBar seekbar;
+    MusicPlayerAdapter adapter;
     public static MediaPlayer player;
     ImageButton bt_play, bt_prev, bt_next, bt_list_music;
     ListView lv;
-    MusicPlayerAdapter adapter;
     boolean da_play = true;
     String filehientai = "";
     String tenfilehientai ="";
@@ -96,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         btn_game = findViewById(R.id.btn_game);
         tv_name = findViewById(R.id.tv_characterName);
         tv_message = findViewById(R.id.tv_characterMess);
-        clock = findViewById(R.id.clock);
+        clock_time = findViewById(R.id.clock_time);
 
         //Hide message
         tv_name.setVisibility(View.INVISIBLE);
@@ -114,6 +129,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //Show
+                try {
+                    lv_alarm.setVisibility(View.GONE);
+                }catch (Exception e){
+
+                }
                 tv_name.setVisibility(View.VISIBLE);
                 tv_message.setVisibility(View.VISIBLE);
                 int rnd = new Random().nextInt(message_arr.size());
@@ -130,7 +150,8 @@ public class MainActivity extends AppCompatActivity {
                 changeMessage();
             }
         });
-        clock();
+        //Clock
+        clockHandler.postDelayed(updateClock,0);
         //Media player
         //Bắt sự kiện từ button notification
         registerReceiver(broadCastReceiver,new IntentFilter("android.MusicPauseOrPlay"));
@@ -241,66 +262,104 @@ public class MainActivity extends AppCompatActivity {
                 batdauphatnhac(filehientai);
             }
         });
-
-    }
-    private void clock(){
-        bg = findViewById(R.id.bg);
-        hour = findViewById(R.id.hour);
-        minute = findViewById(R.id.minute);
-        second = findViewById(R.id.second);
-
-        Date date = new Date();
-        s=date.getSeconds()*6;
-        m=date.getMinutes()*6;
-        h=date.getHours()*30;
-        second.setRotation(s);
-        minute.setRotation(m);
-        hour.setRotation(h);
-        runTime();
-    }
-    private void runTime(){
-        ObjectAnimator seconds = ObjectAnimator.ofFloat(second,"rotation",s);
-        seconds.setDuration(1000);
-        seconds.setRepeatCount(ValueAnimator.INFINITE);
-        seconds.setRepeatMode(ValueAnimator.RESTART);
-        seconds.addListener(new Animator.AnimatorListener() {
+        // List Alarm
+        lv_alarm = findViewById(R.id.alarm_list);
+        alarm_add = findViewById(R.id.alarm_add);
+        clock_time.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onAnimationStart(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animator animation) {
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-                s=s+oneSec;
-                m=m+oneSec/60;
-                h=h+oneSec/3600;
-                ObjectAnimator seconds = ObjectAnimator.ofFloat(second,"rotation",s);
-                seconds.setDuration(1000);
-                seconds.start();
-
-                ObjectAnimator min = ObjectAnimator.ofFloat(minute,"rotation",m);
-                min.setDuration(1);
-                min.start();
-
-                ObjectAnimator hou = ObjectAnimator.ofFloat(hour,"rotation",h);
-                hou.setDuration(1);
-                hou.start();
-
+            public void onClick(View v) {
+                if (lv_alarm.getVisibility() == View.GONE) {
+                    lv_alarm.setVisibility(View.VISIBLE);
+                    alarm_add.setVisibility(View.VISIBLE);
+                    tv_message.setVisibility(View.GONE);
+                    tv_name.setVisibility(View.GONE);
+                } else {
+                    lv_alarm.setVisibility(View.GONE);
+                    alarm_add.setVisibility(View.GONE);
+                }
             }
         });
+        alarm_add.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
+                LayoutInflater inflater = getLayoutInflater();
+                View dialogView = inflater.inflate(R.layout.alarm_picker_dialog, null );
+                final TimePicker timePicker = dialogView.findViewById(R.id.alarm_picker);
+                Button btnConfirm = dialogView.findViewById(R.id.alarm_confirm);
+                Button btnCancel = dialogView.findViewById(R.id.alarm_cancel);
+                final TextView tvAlarmRepeat = dialogView.findViewById(R.id.alarm_repeat);
 
-        AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.play(seconds);
-        animatorSet.start();
+                builder.setView(dialogView);
+                final AlertDialog alertDialog = builder.create();
+                alertDialog.show();
+                tvAlarmRepeat.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        repeatDays.clear();
+                        repeat="";
+                        AlertDialog.Builder builder1 = new AlertDialog.Builder(v.getContext());
+                        builder1.setMultiChoiceItems(days, null, new DialogInterface.OnMultiChoiceClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                                if (isChecked){
+                                    repeatDays.add(days[which]);
+                                }else {
+                                    repeatDays.remove(days[which]);
+                                }
+                            }
+                        })
+                                .setPositiveButton("Đồng ý", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Collections.sort(repeatDays);
+                                        for (String day: repeatDays) {
+                                            if (day==null){
+                                                day="";
+                                            }else {
+                                                repeat+=day+" ";
+                                            }
+                                        }
+                                        tvAlarmRepeat.setText("Lặp lại: "+repeat);
+                                    }
+                                })
+                                .setNegativeButton("Hủy bỏ", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                    }
+                                });
+                        builder1.show();
+                    }
+                });
+                btnConfirm.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Alarm alarm = new Alarm();
+                        alarm.setStt(alarmList.size());
+                        alarm.setHour(timePicker.getHour()+"");
+                        alarm.setMin(timePicker.getMinute()+"");
+                        alarm.setRepeat(repeat);
+                        alarm.setStatus("on");
+                        alarmDAO.insertAlarm(alarm);
+                        alarmList.add(alarm);
+                        alarmAdapter.notifyDataSetChanged();
+                        repeat="";
+                        alertDialog.cancel();
+                    }
+                });
+                btnCancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        alertDialog.cancel();
+                    }
+                });
+            }
+        });
+        alarmDAO = new AlarmDAO(this);
+        alarmList = alarmDAO.getAllAlarm();
+        alarmAdapter = new AlarmAdapter(this, R.layout.alarm_item, alarmList);
+        lv_alarm.setAdapter(alarmAdapter);
     }
     private void jumpAnimation(){
         ObjectAnimator character = ObjectAnimator.ofFloat(iv_character,"translationY",-100);
@@ -403,7 +462,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
     private final Handler handler = new Handler();
     private final Runnable updatePositionRunnable = new Runnable() {
         public void run() {
@@ -479,5 +537,39 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
+    //clock
+    int clockCheck = 0;
+    final Handler clockHandler = new Handler();
+    private Runnable updateClock = new Runnable()
+    {
+        public void run() {
+            String time = updateTimer();
+            String hour = time.substring(0,2);
+            String min = time.substring(2,4);
+            if (clockCheck == 1) {
+                clockCheck--;
+                clock_time.setText(hour + ":" + min);
+                clockHandler.postDelayed(updateClock, 500);
+            }else {
+                clockCheck++;
+                clock_time.setText(hour + " " + min);
+                clockHandler.postDelayed(updateClock, 500);
+            }
+        }
+    };
+    private String updateTimer(){
+        Date date = new Date();
+        String hour = date.getHours()+"";
+        String min = date.getMinutes()+"";
+        if (date.getHours()<10){
+            hour="0"+hour;
+        }
+        if (date.getMinutes()<10){
+            min="0"+min;
+        }
+        return hour+min;
+    }
+
 }
 

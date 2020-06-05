@@ -17,7 +17,7 @@ public class AlarmDAO {
     private DbHelper dbHelper;
 
     public static final String TABLE_NAME = "Alarm";
-    public static final String SQL_ALARM = "CREATE TABLE Alarm (stt text primary key, hour text NOT NULL, min text NOT NULL, repeat text NOT NULL, status text NOT NULL);";
+    public static final String SQL_ALARM = "CREATE TABLE Alarm (stt integer primary key, hour text NOT NULL, min text NOT NULL, repeat text NOT NULL, status text NOT NULL);";
 
     public AlarmDAO(Context context){
         dbHelper = new DbHelper(context);

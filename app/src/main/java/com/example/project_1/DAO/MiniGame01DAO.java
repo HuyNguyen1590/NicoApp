@@ -17,7 +17,7 @@ public class MiniGame01DAO {
     private DbHelper dbHelper;
 
     public static final String TABLE_NAME = "MiniGame01";
-    public static final String SQL_MINIGAME01 = "CREATE TABLE MiniGame01 (stt int primary key AUTOINCREMENT, score text NOT NULL);";
+    public static final String SQL_MINIGAME01 = "CREATE TABLE MiniGame01 (stt integer primary key AUTOINCREMENT, score text NOT NULL);";
 
     public MiniGame01DAO(Context context){
         dbHelper = new DbHelper(context);
