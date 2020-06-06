@@ -59,6 +59,8 @@ public class AlarmAdapter extends ArrayAdapter {
         v.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
+                AlarmDAO alarmDAO = new AlarmDAO(v.getContext());
+                MainActivity.alertDialog.show();
                 Toast.makeText(v.getContext(), "Update", Toast.LENGTH_SHORT).show();
                 return false;
             }

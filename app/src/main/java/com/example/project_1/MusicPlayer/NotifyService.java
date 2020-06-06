@@ -34,7 +34,7 @@ public class NotifyService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String songName = intent.getStringExtra("songName");
         String artist = intent.getStringExtra("artist");
-        action = new NotificationCompat.Action(android.R.drawable.ic_media_pause,"PlayOrPause",makePendingIntent("PlayOrPause"));
+        //action = new NotificationCompat.Action(android.R.drawable.ic_media_pause,"PlayOrPause",makePendingIntent("PlayOrPause"));
         if (MainActivity.player.isPlaying()){
             action = new NotificationCompat.Action(android.R.drawable.ic_media_pause,"PlayOrPause",makePendingIntent("PlayOrPause"));
 
@@ -52,6 +52,7 @@ public class NotifyService extends Service {
                 .addAction(android.R.drawable.ic_media_previous,"Prev",makePendingIntent("Prev"))
                 .addAction(action)
                 .addAction(android.R.drawable.ic_media_next,"Next",makePendingIntent("Next"))
+                .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop", makePendingIntent("Stop"))
                 .setStyle(new androidx.media.app.NotificationCompat.MediaStyle())
                 .build();
 
@@ -62,7 +63,7 @@ public class NotifyService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
+        stopForeground(true);
     }
 
     @Nullable

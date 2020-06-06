@@ -22,6 +22,9 @@ public class MusicPlayerNotification extends BroadcastReceiver {
             case "Prev":
                 context.sendBroadcast(new Intent("android.MusicPrev"));
                 break;
+            case "Stop":
+                context.sendBroadcast(new Intent("android.MusicStop"));
+                break;
         }
     }
 

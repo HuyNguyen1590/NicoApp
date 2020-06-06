@@ -67,6 +67,11 @@ public class MainActivity extends AppCompatActivity {
     String [] days = new String[]{"Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"};
     ArrayList<String> repeatDays = new ArrayList<>();
     String repeat = "";
+    // Alarm dialog
+    public static AlertDialog.Builder builder;
+    public static TimePicker timePicker;
+    public static TextView tvAlarmRepeat;
+    public static AlertDialog alertDialog;
     //Media player
     int UPDATE_FREQUENCY = 500;
     int POSITION=0;
@@ -89,34 +94,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Character message
-        message_arr.add("みんなのアイドルにこにーだよ～にっこにっこにー☆");
-        message_arr.add("にこがお手伝いしちゃうよ♪");
-        message_arr.add("お呼びですかご主人様？");
-        message_arr.add("きゃー、くすぐったいー");
-        message_arr.add("え～、やだ、なんですか～？");
-        message_arr.add("も～だめですよぉ～");
-        message_arr.add("好きだよ♪");
-
-        //Voice array
-        voice_arr.add(R.raw.quote01);
-        voice_arr.add(R.raw.quote02);
-        voice_arr.add(R.raw.quote03);
-        voice_arr.add(R.raw.quote04);
-        voice_arr.add(R.raw.quote05);
-        voice_arr.add(R.raw.quote06);
-        voice_arr.add(R.raw.quote07);
-
-        iv_character = findViewById(R.id.iv_character);
-        btn_game = findViewById(R.id.btn_game);
-        tv_name = findViewById(R.id.tv_characterName);
-        tv_message = findViewById(R.id.tv_characterMess);
-        clock_time = findViewById(R.id.clock_time);
-
+        init();
         //Hide message
         tv_name.setVisibility(View.INVISIBLE);
         tv_message.setVisibility(View.INVISIBLE);
-
 
         btn_game.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -152,19 +133,15 @@ public class MainActivity extends AppCompatActivity {
         });
         //Clock
         clockHandler.postDelayed(updateClock,0);
+
         //Media player
         //Bắt sự kiện từ button notification
         registerReceiver(broadCastReceiver,new IntentFilter("android.MusicPauseOrPlay"));
         registerReceiver(broadCastReceiver,new IntentFilter("android.MusicNext"));
         registerReceiver(broadCastReceiver,new IntentFilter("android.MusicPrev"));
+        registerReceiver(broadCastReceiver, new IntentFilter("android.MusicStop"));
 
-        tv_fileduocchon = (TextView) findViewById(R.id.selectedfile);
-        bt_play = (ImageButton) findViewById(R.id.play);
-        bt_next = (ImageButton) findViewById(R.id.next);
-        bt_prev = (ImageButton) findViewById(R.id.prev);
-        seekbar = (SeekBar) findViewById(R.id.seekbar);
-        lv = (ListView) findViewById(R.id.list);
-        bt_list_music = findViewById(R.id.list_music);
+
         bt_list_music.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -262,9 +239,7 @@ public class MainActivity extends AppCompatActivity {
                 batdauphatnhac(filehientai);
             }
         });
-        // List Alarm
-        lv_alarm = findViewById(R.id.alarm_list);
-        alarm_add = findViewById(R.id.alarm_add);
+
         clock_time.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -282,16 +257,16 @@ public class MainActivity extends AppCompatActivity {
         alarm_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
+                builder = new AlertDialog.Builder(v.getContext());
                 LayoutInflater inflater = getLayoutInflater();
                 View dialogView = inflater.inflate(R.layout.alarm_picker_dialog, null );
-                final TimePicker timePicker = dialogView.findViewById(R.id.alarm_picker);
+                timePicker = dialogView.findViewById(R.id.alarm_picker);
                 Button btnConfirm = dialogView.findViewById(R.id.alarm_confirm);
                 Button btnCancel = dialogView.findViewById(R.id.alarm_cancel);
-                final TextView tvAlarmRepeat = dialogView.findViewById(R.id.alarm_repeat);
+                tvAlarmRepeat = dialogView.findViewById(R.id.alarm_repeat);
 
                 builder.setView(dialogView);
-                final AlertDialog alertDialog = builder.create();
+                alertDialog = builder.create();
                 alertDialog.show();
                 tvAlarmRepeat.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -507,6 +482,7 @@ public class MainActivity extends AppCompatActivity {
         unregisterReceiver(broadCastReceiver);
         stopService();
     }
+
     public void startService(){
         String songName = tenfilehientai;
         String artist = tentacgia;
@@ -533,6 +509,9 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case "android.MusicPrev":
                     prevMusic();
+                    break;
+                case "android.MusicStop":
+                    stopService();
                     break;
             }
         }
@@ -570,6 +549,43 @@ public class MainActivity extends AppCompatActivity {
         }
         return hour+min;
     }
+    private void init(){
+        //Character message
+        message_arr.add("みんなのアイドルにこにーだよ～にっこにっこにー☆");
+        message_arr.add("にこがお手伝いしちゃうよ♪");
+        message_arr.add("お呼びですかご主人様？");
+        message_arr.add("きゃー、くすぐったいー");
+        message_arr.add("え～、やだ、なんですか～？");
+        message_arr.add("も～だめですよぉ～");
+        message_arr.add("好きだよ♪");
 
+        //Voice array
+        voice_arr.add(R.raw.quote01);
+        voice_arr.add(R.raw.quote02);
+        voice_arr.add(R.raw.quote03);
+        voice_arr.add(R.raw.quote04);
+        voice_arr.add(R.raw.quote05);
+        voice_arr.add(R.raw.quote06);
+        voice_arr.add(R.raw.quote07);
+
+        iv_character = findViewById(R.id.iv_character);
+        btn_game = findViewById(R.id.btn_game);
+        tv_name = findViewById(R.id.tv_characterName);
+        tv_message = findViewById(R.id.tv_characterMess);
+        clock_time = findViewById(R.id.clock_time);
+
+        // Media player
+        tv_fileduocchon =  findViewById(R.id.selectedfile);
+        bt_play =  findViewById(R.id.play);
+        bt_next =  findViewById(R.id.next);
+        bt_prev =  findViewById(R.id.prev);
+        seekbar =  findViewById(R.id.seekbar);
+        lv =  findViewById(R.id.list);
+        bt_list_music = findViewById(R.id.list_music);
+
+        // List Alarm
+        lv_alarm = findViewById(R.id.alarm_list);
+        alarm_add = findViewById(R.id.alarm_add);
+    }
 }
 

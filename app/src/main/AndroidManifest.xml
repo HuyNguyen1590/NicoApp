@@ -38,6 +38,7 @@
                 <action android:name="android.MusicPauseOrPlay" />
                 <action android:name="android.MusicNext" />
                 <action android:name="android.MusicPrev" />
+                <action android:name="android.MusicStop"/>
             </intent-filter>
         </receiver>
         <service android:name=".MusicPlayer.NotifyService" />
